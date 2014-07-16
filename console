@@ -1,0 +1,146 @@
+### Emily Puth 28239807 and Anshu Singh 88683915. Lab 1. project 1 
+
+
+import os
+import shutil
+import datetime
+
+def file_info(): # nothing -> interaction
+    ''' Main program
+    '''
+    print('Welcome to the directory search program!')
+    commands = menu_commands()
+    print('\nThank you. Good-bye.')
+
+MENU = """
+Directory Search Program ---
+Choose the search characteristics to use in deciding whether files are "interesting"
+ n: Search by name (i.e. "boo.jpg")
+ e: Search by name ending (i.e. ".py")
+ s: Search by size (by bytes)
+"""
+
+MENU2 = """
+Which of the actions below should be taken on each of the interesting files?
+ p: Print path only
+ f: Print the first line of the text
+ c: Copy file
+ t: Touch file
+ r: Return to main menu
+"""
+
+
+def menu_commands():
+    directory = input('Enter the path to the directory in which the search for files should be rooted: ')
+    if os.path.isdir(directory):
+        while True:
+            response = input(MENU)
+            if response.strip() == "n":
+                tempList = search_by_name(directory)
+                if  tempList != []:
+                    for name in tempList:
+                        print(name)
+                    menu2_commands(directory, tempList)
+                else:
+                    print('ERROR: File Not Found')
+            elif response.strip() == "e":
+                tempList1 = search_by_name_ending(directory)
+                if  tempList1 != []:
+                    for ending in tempList1:
+                        print(ending)
+                    menu2_commands(directory, tempList1)
+                else:
+                    print('Sorry, there are no files with that extension.')
+            elif response.strip() == "s":
+                tempList2 = search_by_size(directory)
+                if  tempList2 != []:
+                    for size in tempList2:
+                        print(size)
+                    menu2_commands(directory, tempList2)
+                else:
+                    print('Sorry, there are no files with that size.')
+            else:
+                invalid_command(response)           
+    else: 
+        print('ERROR: the specified directory does not exist')
+        menu_commands()        
+
+
+def menu2_commands(directory:str, file_list:str):
+    while True:
+        actions = input(MENU2)
+        if actions.strip() == 'p':
+            for path in file_list:
+                print('Path: {}'.format(path))
+        elif actions.strip() == 'f':
+            for path in file_list:
+                infile = open(path, 'r')
+                print('First line of path {} is:\n   {}'.format(path,infile.readline()))
+                infile.close()
+        elif actions == 'c':
+            for path in file_list:
+                copy_file = (path + '.dup')
+                shutil.copy (path, copy_file)
+                print('Your file with the path {} has been duplicated at the path {}'.format(path, copy_file))
+        elif actions == 't':
+            for path in file_list:
+                t = os.path.getmtime(path)
+                print('The modified timestamp of the path {} is {}'.format(path, datetime.datetime.fromtimestamp(t)))
+        elif actions == 'r':
+             menu_commands()
+        else:
+            invalid_command(actions)
+
+def invalid_command(response):
+    print('Invalid Command. Please try again.')
+
+def search_directories(directory:str):
+    ''' Searches through all the directories and subdirectories in the specified
+        directory and adds it to a list
+    '''
+    files = []
+    for content in os.listdir(directory):
+        path = os.path.join(directory, content)
+        if os.path.isdir(path):
+            files.extend(search_directories(path))
+    
+        else:
+            files.append(path)
+    return files
+
+def search_by_name(directory:str) -> str:
+    ''' Returns true if the file is in the specified directory
+    '''
+    name = input('Enter the file name to be searched: ')
+    file_name = []
+    file = os.path.join(directory, name.strip())
+    if file in search_directories(directory):
+        file_name.append(file)
+    return file_name
+
+def search_by_name_ending(directory:str)-> list: 
+    ''' Returns a list of all the files with the specified extension
+    '''
+    end = input('Enter the file extension to be searched: ')
+    os.chdir(directory)
+    same = []
+    for file in search_directories(directory):
+        if file.endswith(end.strip()):
+            same.append(file)
+    return same
+
+def search_by_size (directory:str) -> list: 
+    ''' Returns a list of all the files with the specified byte size
+    '''
+    size = int(input('Enter the file size: '))
+    os.chdir(directory)
+    same = []
+    for file in search_directories(directory):
+        if os.stat(file).st_size == size:
+            same.append(file)
+    return same
+
+
+(file_info())
+
+
